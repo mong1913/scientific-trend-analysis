@@ -2,10 +2,46 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.ticker as mticker
 from sklearn.metrics import silhouette_samples, silhouette_score
 
+def category_plot(cat_counts_pd, category_list, df_pivot_top):
+    """
+    Create topic bar chart and stacked area plot over time
+
+    Parameters:
+        cat_counts_pd : pandas DataFrame containing category counts
+        category_list : string, column name for category list
+        df_pivot_top : pandas DataFrame containing category counts pivoted by year
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 7))
+    plt.subplots_adjust(wspace=0.5)
+
+    # Plot 1
+    sns.barplot(data=cat_counts_pd, x=category_list, y='count', ax=ax1)
+    ax1.set_xlabel('Category list', fontsize=18)
+    ax1.set_ylabel('Paper Count', fontsize=18)
+    ax1.tick_params(axis='x', labelsize=18, rotation=45)
+    ax1.tick_params(axis='y', labelsize=18)
+
+    # Plot 2
+    df_pivot_top.plot(kind='area', stacked=True, ax=ax2, alpha=0.8)
+    ax2.set_xlabel('Year', fontsize=18)
+    ax2.set_ylabel('Number of Papers', fontsize=18)
+    ax2.set_title('Papers Published Over Years by Category (Top 10 Categories)', fontsize=15, fontweight='bold')
+    ax2.legend(title='Category', loc='upper left', fontsize=16)
+    ax2.grid(True, alpha=0.3)
+    ax2.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax2.tick_params(axis='x', labelsize=18, rotation=45)
+    ax2.tick_params(axis='y', labelsize=18)
+
+    plt.tight_layout()
+    plt.show()
+
+
+
 def plot_dim_reduction(embedding_2d, cluster_labels, technique_name, 
-                       cluster_id, sample_size, figsize=(10, 7)):
+                       cluster_id, sample_size, clustering_algo, figsize=(10, 7)):
     """
     Create a scatter plot to visualize clustering results in 2D using dimensionality reduction techniques
     
@@ -22,6 +58,7 @@ def plot_dim_reduction(embedding_2d, cluster_labels, technique_name,
             Number of samples being visualized
         figsize : tuple, optional
             Figure size (width, height)
+        clustering_algo: string, algorithm name (e.g. 'KMeans', 'GaussianMixture')
     """
     # Create DataFrame with consistent column naming
     col_names = [f'{technique_name}1', f'{technique_name}2']
@@ -40,7 +77,7 @@ def plot_dim_reduction(embedding_2d, cluster_labels, technique_name,
         alpha=0.7
     )
     
-    plt.title(f'{technique_name} Visualization with KMeans Clusters (stratified n={sample_size:,})', 
+    plt.title(f'{technique_name} Visualization with {clustering_algo} Clusters (stratified n={sample_size:,})', 
               fontsize=12, fontweight='bold')
     plt.xlabel(f'{technique_name} Dimension 1', fontsize=11)
     plt.ylabel(f'{technique_name} Dimension 2', fontsize=11)
@@ -59,12 +96,9 @@ def silhouette_plot(lsa_result, cluster_labels, best_k):
     Create a silhouette plot to visualize clustering results
     
     Parameters:
-        lsa_result : ndarray, shape (n_samples, n_components)
-            Transformed data using LSA
-        cluster_labels : array-like
-            Cluster assignments for each sample
-        best_k : int
-            Best number of clusters determined by silhouette score
+        lsa_result : ndarray, shape (n_samples, n_components), ransformed data using LSA
+        cluster_labels : array, cluster assignments for each sample
+        best_k : int, best number of clusters determined by silhouette score
     """
 
     #Calculate the silhouette score for each data
@@ -96,7 +130,7 @@ def silhouette_plot(lsa_result, cluster_labels, best_k):
         # Update y_lower for next cluster
         y_lower = y_upper + 10
 
-    ax.set_title(f"Silhouette Plot (KMeans k={best_k}, sampled n={len(lsa_result):,})", 
+    ax.set_title(f"Silhouette Plot (k={best_k}, sampled n={len(lsa_result):,})", 
                 fontsize=16, fontweight='bold')
     ax.set_xlabel("Silhouette Coefficient", fontsize=14)
     ax.set_ylabel("Cluster Label", fontsize=14)
