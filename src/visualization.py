@@ -65,27 +65,41 @@ def plot_dim_reduction(embedding_2d, cluster_labels, technique_name,
     df_plot = pd.DataFrame(embedding_2d, columns=col_names)
     df_plot[cluster_id] = cluster_labels
     
-    # Create plot
-    plt.figure(figsize=figsize)
-    sns.scatterplot(
-        data=df_plot, 
-        x=col_names[0], 
-        y=col_names[1],
-        hue=cluster_id,
-        palette='tab10',
-        s=15, 
-        alpha=0.7
-    )
+    n_clusters = len(df_plot[cluster_id].unique())
     
-    plt.title(f'{technique_name} Visualization with {clustering_algo} Clusters (stratified n={sample_size:,})', 
-              fontsize=12, fontweight='bold')
+    # Define distinct colors for up to 12 clusters using tab20 colormap
+    colors = plt.get_cmap('tab20').colors[:12]
+    
+    # Define marker shapes (cycle through if more clusters than shapes)
+    # markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h', 'H', '+']
+    
+    # Create plot
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Plot each cluster with unique color and marker
+    for i, cluster in enumerate(sorted(df_plot[cluster_id].unique())):
+        cluster_data = df_plot[df_plot[cluster_id] == cluster]
+        ax.scatter(
+            cluster_data[col_names[0]], 
+            cluster_data[col_names[1]],
+            c=[colors[i % len(colors)]], 
+            #marker=markers[i % len(markers)],
+            s=25, 
+            alpha=0.7,
+            label=f'{cluster}',
+            edgecolors='none'
+        )
+    
+    # plt.title(f'{technique_name} Visualization with {clustering_algo} Clusters (stratified n={sample_size:,})', 
+    #           fontsize=12, fontweight='bold')
     plt.xlabel(f'{technique_name} Dimension 1', fontsize=11)
     plt.ylabel(f'{technique_name} Dimension 2', fontsize=11)
-    plt.legend(title='Cluster ID', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.legend(title='Cluster ID', bbox_to_anchor=(1.05, 1), loc='upper left', 
+               markerscale=1.5, frameon=True, fancybox=True)
     plt.tight_layout()
     plt.show()
     
-    print(f"{technique_name} visualization complete with {len(df_plot[cluster_id].unique())} clusters")
+    print(f"{technique_name} visualization complete with {n_clusters} clusters")
     
     return df_plot
 
